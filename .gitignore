@@ -1,0 +1,34 @@
+# AgentForge — secrets and build artifacts. NEVER commit a private key.
+# Deployer / tester keys (funded wallets; mode 600; never print, never commit)
+.deployer-key-*
+.tester2-key-*
+*.key
+*.pem
+
+# Environment / credentials
+.env
+.env.*
+!.env.example
+credentials.json
+**/credentials.json
+
+# Foundry build outputs
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/docs/
+
+# Logs
+*.log
+.logs/
+.ignore/
+
+# Frontend deps (none vendored today; keep the tree clean if added later)
+frontend/node_modules/
+node_modules/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

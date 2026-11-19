@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentForge — Hero mint, merge, forge &amp; battle</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 880px; margin: 0 auto; padding: 16px; line-height: 1.5; }
+  h1 { margin-bottom: 0; } .sub { color: #888; margin-top: 2px; }
+  section { border: 1px solid #8884; border-radius: 10px; padding: 14px; margin: 14px 0; }
+  h2 { margin-top: 0; }
+  button { padding: 8px 14px; margin: 4px 4px 4px 0; cursor: pointer; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  input, select { padding: 7px; margin: 4px 4px 4px 0; max-width: 100%; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .card { border: 1px solid #8884; border-radius: 8px; padding: 10px; margin: 8px 0; }
+  .muted { color: #888; font-size: .92em; }
+  .warn { background: #fff3cd33; border: 1px solid #b58900; border-radius: 8px; padding: 10px; }
+  .err { background: #f8d7da33; border: 1px solid #a33; border-radius: 8px; padding: 10px; }
+  .ok { color: #2a7a2a; } .bad { color: #a33; }
+  #log { white-space: pre-wrap; font-size: .9em; }
+  table { border-collapse: collapse; } td, th { border: 1px solid #8884; padding: 4px 8px; text-align: left; }
+  code { word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>AgentForge</h1>
+<p class="sub">Free Hero mint for Agent ID holders · merge · forge · PvP battles · end-of-season pool split. Runs on BNB Smart Chain.</p>
+
+<div id="deployBanner" class="warn" hidden>
+  <b>No contract address yet.</b> AgentForge has not been deployed — paste the address into
+  <code>config.js</code> (<code>AGENT_FORGE_ADDRESS</code>) after the testnet deploy, then reload the page.
+  Transaction buttons are disabled until then.
+</div>
+
+<section id="wallet">
+  <h2>1 · Wallet</h2>
+  <div class="row">
+    <button id="btnConnect">Connect wallet</button>
+    <button id="btnRefresh">Refresh data</button>
+    <span id="walletStatus" class="muted">Not connected.</span>
+  </div>
+  <p class="muted">Uses only a wallet already installed in your browser (MetaMask / wallet extension, via <code>window.ethereum</code>).
+  This page never asks for a seed phrase, private key, or login code — every transaction needs your confirmation in the wallet.</p>
+  <div id="walletInfo"></div>
+</section>
+
+<section id="mint">
+  <h2>2 · Mint Hero</h2>
+  <p id="mintStatus" class="muted">Connect your wallet to see mint status.</p>
+  <div class="row">
+    <button id="btnMintFree">Mint free (1 Hero)</button>
+  </div>
+  <div class="row">
+    <label for="paidCount">Paid mint — quantity:</label>
+    <input id="paidCount" type="number" min="1" max="8" step="1" value="1" style="width:70px">
+    <span id="paidTotal" class="muted"></span>
+    <button id="btnMintPaid">Mint paid</button>
+  </div>
+  <p class="muted">Free mint: 2 per wallet, Agent ID holders only. Paid mint: 0.005 BNB/Hero, max 10 Heroes/wallet (free + paid).
+  100% of paid-mint revenue goes to the season pool — no dev cut. Max supply 10,000 Heroes.</p>
+</section>
+
+<section id="heroes">
+  <h2>3 · My Heroes</h2>
+  <p id="forgeBalance" class="muted"></p>
+  <div id="heroList"><p class="muted">Connect your wallet to see your Heroes.</p></div>
+</section>
+
+<section id="merge">
+  <h2>4 · Merge — combine 2 Heroes</h2>
+  <p class="muted">Burn 2 base Heroes (tier NONE) to receive 1 new Hero at level <code>max(level A, level B) + 1</code>, max Lv10.
+  It takes 10 base Heroes to reach Lv10. Tier-forged Heroes cannot merge.</p>
+  <div class="row">
+    <select id="mergeA"><option value="">— select Hero A —</option></select>
+    <select id="mergeB"><option value="">— select Hero B —</option></select>
+    <span id="mergePreview" class="muted"></span>
+    <button id="btnMerge">Merge</button>
+  </div>
+</section>
+
+<section id="forgeSec">
+  <h2>5 · Forge — forge a Lv10 Hero into a tier Hero</h2>
+  <p class="muted">Only Lv10 tier-NONE Heroes can be forged. The tier is rolled randomly (based on prevrandao, not Chainlink VRF);
+  if the rolled tier is at its cap it automatically drops to a tier with room left. Uncommon is uncapped.</p>
+  <table>
+    <tr><th>Tier</th><th>Roll chance</th><th>Forged / Cap</th><th>Power multiplier</th><th>Season pool weight</th></tr>
+    <tr><td>Legendary</td><td>1%</td><td id="capLG">–</td><td>×3</td><td>100</td></tr>
+    <tr><td>Mythic</td><td>5%</td><td id="capMY">–</td><td>×2</td><td>20</td></tr>
+    <tr><td>Rare</td><td>20%</td><td id="capRA">–</td><td>×1.5</td><td>5</td></tr>
+    <tr><td>Uncommon</td><td>74%</td><td id="capUN">–</td><td>×1.2</td><td>1</td></tr>
+  </table>
+  <div class="row" style="margin-top:8px">
+    <select id="forgeSelect"><option value="">— select a Lv10 Hero —</option></select>
+    <button id="btnForge">Forge</button>
+  </div>
+  <p class="muted">The tier you receive is random — there is no way to guarantee a high tier.</p>
+</section>
+
+<section id="battleSec">
+  <h2>6 · Battle — PvP</h2>
+  <p class="warn"><b>Note:</b> Battling means betting real BNB. Win chance = your power / (your power + opponent’s power) — shown honestly before you accept.
+  The winner takes 95% of the total bet + 1,000 $FORGE; the remaining 5% goes to the season pool. Heroes are never lost, win or lose — only the bet is at risk.
+  <b>Rewards are not guaranteed.</b></p>
+  <h3>Create a new battle</h3>
+  <div class="row">
+    <select id="battleHero"><option value="">— select your Hero —</option></select>
+    <label for="betAmount">Bet (BNB, 0.001–0.05):</label>
+    <input id="betAmount" type="number" min="0.001" max="0.05" step="0.001" value="0.01" style="width:90px">
+    <button id="btnCreateBattle">Create battle</button>
+  </div>
+  <h3>Open battles</h3>
+  <div id="battleList"><p class="muted">Battle list not loaded yet.</p></div>
+  <h3>Accept a battle</h3>
+  <div class="row">
+    <select id="acceptHero"><option value="">— select your Hero —</option></select>
+    <span id="acceptOdds" class="muted"></span>
+  </div>
+  <p class="muted">Pick an open battle above, then select your Hero — your win chance will show before you click “Accept &amp; battle”.</p>
+</section>
+
+<section id="season">
+  <h2>7 · Pool &amp; season</h2>
+  <p class="warn"><b>Rewards are not guaranteed.</b> The season pool is split by the tier weights of forged Heroes;
+  what each Hero receives depends on the total weight at season snapshot — any figure shown is only an estimate at viewing time.</p>
+  <div id="seasonInfo"><p class="muted">Season data not loaded yet.</p></div>
+  <div class="row">
+    <button id="btnSnapshot">Snapshot season</button>
+    <span class="muted">Anyone can click it, only after the season ends, and only once.</span>
+  </div>
+  <h3>Claim season rewards (tier Heroes only)</h3>
+  <div id="claimList"><p class="muted">Connect your wallet to see Heroes eligible to claim.</p></div>
+</section>
+
+<section>
+  <h2>Log</h2>
+  <div id="log" class="muted">—</div>
+  <p id="txStatus"></p>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
