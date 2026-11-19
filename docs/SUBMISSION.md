@@ -3,7 +3,7 @@
 **Hackathon:** Binance Agent ID Hackathon (Binance Wallet × BNB Chain)
 **Submission deadline:** 15:00 VN, 9 December 2026
 **Team:** VO (ganggangtrader.ai)
-**Repository:** [TODO: public repo URL — tree prepared 19/11/2026 (`.gitignore` + `README.md` + `LICENSE` MIT in the workdir); `gh` is not authenticated on this machine, so the repo cannot be created/pushed from here yet]
+**Repository:** https://github.com/hoanglop86/agentforge (public, created + pushed 19/11/2026)
 **Live demo:** [TODO: demo URL — frontend hosting in progress 19/11/2026; testnet deployment is DONE (see §3), only hosting is pending]
 
 ## 0. Submission process — status 19/11/2026 (facts only, nothing submitted yet)
@@ -96,7 +96,7 @@ Agent ID is the access gate for the whole game, not a checkbox:
   pool accounting, merge levels, forge caps and downgrade, battle
   escrow/payout/cancel, season snapshot and claim math, double-claim revert).
 - **Open source:** contracts are verified and open-source on BscScan/Sourcify
-  after deployment. [TODO: repo link]
+  after deployment. Repo: https://github.com/hoanglop86/agentforge
 
 Key numbers: 2 free mints per wallet; paid mint 0.005 BNB, max 10 mints per
 wallet total; base supply cap 10,000. Merge: burn two Heroes → one Hero at
